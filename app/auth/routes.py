@@ -27,7 +27,7 @@ def signup():
     if current_user.is_authenticated:
         return redirect(url_for('catalogue.books'))
     
-    form = SignupForm
+    form = SignupForm()
 
     #Checks request is POST AND all form validators passed
     if form.validate_on_submit():

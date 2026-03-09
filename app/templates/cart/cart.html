@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}My Cart — BookStore{% endblock %}
+
+{% block content %}
+
+<!-- ─────────────────────────────────────────────────────────────
+     CART PAGE
+     Shows all items in the logged-in user's cart.
+     Allows quantity update and item removal.
+     ───────────────────────────────────────────────────────────── -->
+
+<div class="container my-5">
+
+    <h2 class="fw-bold mb-4">
+        <i class="bi bi-cart3 me-2"></i>My Cart
+    </h2>
+
+    {% if cart_items %}
+
+        <div class="row g-4">
+
+            <!-- ─────────────────────────────────────── -->
+            <!-- LEFT COLUMN — Cart Items List           -->
+            <!-- ─────────────────────────────────────── -->
+            <div class="col-lg-8">
+
+                {% for item in cart_items %}
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="row g-0 align-items-center">
+
+                        <!-- Book Cover (small) -->
+                        <div class="col-3 col-md-2">
+                            <div
+                                class="cart-item-cover rounded-start d-flex
+                                       align-items-center justify-content-center
+                                       text-white fw-bold fs-5"
+                                data-color="{{ item.book.cover }}"
+                                style="height: 100px;">
+                                {{ item.book.title[:2].upper() }}
+                            </div>
+                        </div>
+
+                        <!-- Book Details + Controls -->
+                        <div class="col-9 col-md-10">
+                            <div class="card-body py-3 px-3">
+                                <div class="row align-items-center">
+
+                                    <!-- Title + Author -->
+                                    <div class="col-md-5">
+                                        <h6 class="fw-bold mb-1">
+                                            <a href="{{ url_for('catalogue.book_detail', book_id=item.book.id) }}"
+                                               class="text-dark text-decoration-none">
+                                                {{ item.book.title }}
+                                            </a>
+                                        </h6>
+                                        <p class="text-muted small mb-0">
+                                            by {{ item.book.author }}
+                                        </p>
+                                        <p class="fw-bold mb-0 mt-1">
+                                            £{{ "%.2f"|format(item.book.price|float) }}
+                                        </p>
+                                    </div>
+
+                                    <!-- Quantity Update Form -->
+                                    <div class="col-md-4 mt-2 mt-md-0">
+                                        <form
+                                            method="POST"
+                                            action="{{ url_for('cart.update_quantity', item_id=item.id) }}"
+                                            class="d-flex align-items-center gap-2">
+                                            <label class="text-muted small me-1">Qty:</label>
+                                            <input
+                                                type="number"
+                                                name="quantity"
+                                                value="{{ item.quantity }}"
+                                                min="0"
+                                                max="99"
+                                                class="form-control form-control-sm"
+                                                style="width: 70px;"
+                                            >
+                                            <button
+                                                type="submit"
+                                                class="btn btn-outline-secondary btn-sm">
+                                                Update
+                                            </button>
+                                        </form>
+                                    </div>
+
+                                    <!-- Item Subtotal + Remove -->
+                                    <div class="col-md-3 mt-2 mt-md-0 text-md-end">
+                                        <p class="fw-bold mb-1">
+                                            £{{ "%.2f"|format(item.book.price|float * item.quantity) }}
+                                        </p>
+                                        <!-- Remove Form -->
+                                        <form
+                                            method="POST"
+                                            action="{{ url_for('cart.remove_from_cart', item_id=item.id) }}">
+                                            <button
+                                                type="submit"
+                                                class="btn btn-link btn-sm text-danger p-0"
+                                                onclick="return confirm('Remove this item?')">
+                                                <i class="bi bi-trash me-1"></i>Remove
+                                            </button>
+                                        </form>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                {% endfor %}
+
+            </div>
+            <!-- END LEFT COLUMN -->
+
+
+            <!-- ─────────────────────────────────────── -->
+            <!-- RIGHT COLUMN — Order Summary            -->
+            <!-- ─────────────────────────────────────── -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+
+                        <h5 class="fw-bold mb-3">Order Summary</h5>
+
+                        <!-- Itemised list -->
+                        {% for item in cart_items %}
+                        <div class="d-flex justify-content-between
+                                    text-muted small mb-1">
+                            <span>
+                                {{ item.book.title[:20] }}
+                                {% if item.book.title|length > 20 %}...{% endif %}
+                                × {{ item.quantity }}
+                            </span>
+                            <span>
+                                £{{ "%.2f"|format(item.book.price|float * item.quantity) }}
+                            </span>
+                        </div>
+                        {% endfor %}
+
+                        <hr>
+
+                        <!-- Total -->
+                        <div class="d-flex justify-content-between fw-bold fs-5">
+                            <span>Total</span>
+                            <span>£{{ "%.2f"|format(total) }}</span>
+                        </div>
+
+                        <hr>
+
+                        <!-- Checkout Button -->
+                        <div class="d-grid mt-3">
+                            <a href="{{ url_for('cart.checkout') }}"
+                               class="btn btn-dark btn-lg">
+                                <i class="bi bi-credit-card me-2"></i>
+                                Proceed to Checkout
+                            </a>
+                        </div>
+
+                        <!-- Continue Shopping -->
+                        <div class="d-grid mt-2">
+                            <a href="{{ url_for('catalogue.books') }}"
+                               class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>
+                                Continue Shopping
+                            </a>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <!-- END RIGHT COLUMN -->
+
+        </div>
+
+    {% else %}
+
+        <!-- ─────────────────────────────────────── -->
+        <!-- EMPTY CART STATE                        -->
+        <!-- ─────────────────────────────────────── -->
+        <div class="text-center py-5">
+            <p class="fs-1">🛒</p>
+            <h4 class="text-muted">Your cart is empty</h4>
+            <p class="text-muted mb-4">
+                Browse our catalogue and add some books!
+            </p>
+            <a href="{{ url_for('catalogue.books') }}"
+               class="btn btn-dark btn-lg px-5">
+                <i class="bi bi-book me-2"></i>Browse Books
+            </a>
+        </div>
+
+    {% endif %}
+
+</div>
+
+
+<!-- Apply cover colours via JS (same pattern as books.html) -->
+<script>
+document.querySelectorAll('.cart-item-cover').forEach(function(el) {
+    const color = el.getAttribute('data-color');
+    if (color) {
+        el.style.backgroundColor = color;
+    }
+});
+</script>
+
+{% endblock %}

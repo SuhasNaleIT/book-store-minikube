@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Processing Payment — BookStore{% endblock %}
+
+{% block content %}
+
+<!-- ─────────────────────────────────────────────────────────────
+     PAYMENT PROCESSING PAGE
+     Shown after user clicks Place Order.
+     Spinner displays for 2.5 seconds, then JS redirects
+     automatically to the order confirmation page.
+     ───────────────────────────────────────────────────────────── -->
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm text-center p-5">
+
+                <!-- Spinner -->
+                <div class="mb-4">
+                    <div class="spinner-border text-dark"
+                         role="status"
+                         style="width: 3.5rem; height: 3.5rem;">
+                        <span class="visually-hidden">Processing...</span>
+                    </div>
+                </div>
+
+                <h3 class="fw-bold mb-2">Processing Your Payment</h3>
+                <p class="text-muted mb-0">
+                    Please wait, do not close this page...
+                </p>
+
+                <!-- Animated progress bar -->
+                <div class="progress mt-4" style="height: 6px;">
+                    <div class="progress-bar bg-dark progress-bar-striped
+                                progress-bar-animated w-100"
+                         role="progressbar">
+                    </div>
+                </div>
+
+                <p class="text-muted small mt-4 mb-0">
+                    <i class="bi bi-shield-lock me-1"></i>
+                    Secured by BookStore Demo Gateway
+                </p>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ─────────────────────────────────────────────────────────────
+     AUTO REDIRECT
+     Waits 2.5 seconds then sends user to confirmation page.
+     ───────────────────────────────────────────────────────────── -->
+<script>
+    setTimeout(function () {
+        window.location.href = "{{ url_for('cart.order_confirmation') }}";
+    }, 2500);
+</script>
+
+{% endblock %}
