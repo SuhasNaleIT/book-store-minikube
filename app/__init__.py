@@ -12,7 +12,6 @@ from flask import Flask, redirect, url_for
 from config import Config
 from app.extensions import db, bcrypt, login_manager
 
-
 def create_app():
 
     # CREATE FLASK APP

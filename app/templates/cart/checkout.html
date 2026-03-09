@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout — BookStore{% endblock %}
+
+{% block content %}
+
+<!-- ─────────────────────────────────────────────────────────────
+     CHECKOUT PAGE
+     Shows final order summary before placing the order.
+     Payment processing is a placeholder for now.
+     ───────────────────────────────────────────────────────────── -->
+
+<div class="container my-5">
+
+    <h2 class="fw-bold mb-4">
+        <i class="bi bi-credit-card me-2"></i>Checkout
+    </h2>
+
+    <div class="row g-4">
+
+        <!-- LEFT COLUMN — Order Review -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+
+                    <h5 class="fw-bold mb-3">Order Review</h5>
+
+                    {% for item in cart_items %}
+                    <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
+
+                        <!-- Mini cover -->
+                        <div
+                            class="checkout-cover rounded d-flex align-items-center
+                                   justify-content-center text-white fw-bold me-3"
+                            data-color="{{ item.book.cover }}"
+                            style="width: 50px; height: 50px; font-size: 14px; flex-shrink: 0;">
+                            {{ item.book.title[:2].upper() }}
+                        </div>
+
+                        <!-- Details -->
+                        <div class="flex-grow-1">
+                            <p class="fw-bold mb-0">{{ item.book.title }}</p>
+                            <p class="text-muted small mb-0">
+                                by {{ item.book.author }} &nbsp;|&nbsp;
+                                Qty: {{ item.quantity }}
+                            </p>
+                        </div>
+
+                        <!-- Subtotal -->
+                        <div class="text-end">
+                            <p class="fw-bold mb-0">
+                                £{{ "%.2f"|format(item.book.price|float * item.quantity) }}
+                            </p>
+                        </div>
+
+                    </div>
+                    {% endfor %}
+
+                    <!-- Order Total -->
+                    <div class="d-flex justify-content-between fw-bold fs-5 mt-2">
+                        <span>Order Total</span>
+                        <span>£{{ "%.2f"|format(total) }}</span>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Back to Cart -->
+            <div class="mt-3">
+                <a href="{{ url_for('cart.view_cart') }}"
+                   class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Cart
+                </a>
+            </div>
+        </div>
+
+
+        <!-- RIGHT COLUMN — Payment Placeholder -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+
+                    <h5 class="fw-bold mb-3">Payment Details</h5>
+
+                    <!-- Placeholder notice -->
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Actual Payment processing is not implemented in this app.
+                        This is a dummy implementation for demonstration purposes.
+                    </div>
+
+                    <!-- Delivery info -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            Delivering to
+                        </label>
+                        <p class="text-muted mb-0">
+                            <i class="bi bi-person me-1"></i>
+                            {{ current_user.name }}
+                        </p>
+                        <p class="text-muted mb-0">
+                            <i class="bi bi-envelope me-1"></i>
+                            {{ current_user.email }}
+                        </p>
+                    </div>
+
+                    <hr>
+
+                    <!-- Order total summary -->
+                    <div class="d-flex justify-content-between fw-bold fs-5 mb-4">
+                        <span>Total to Pay</span>
+                        <span>£{{ "%.2f"|format(total) }}</span>
+                    </div>
+
+                    <!-- Place Order button -->
+                    <form method="POST" action="{{ url_for('cart.process_payment') }}">
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-dark btn-lg">
+                                <i class="bi bi-lock-fill me-2"></i>
+                                Place Order — £{{ "%.2f"|format(total) }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+<script>
+document.querySelectorAll('.checkout-cover').forEach(function(el) {
+    const color = el.getAttribute('data-color');
+    if (color) {
+        el.style.backgroundColor = color;
+    }
+});
+</script>
+
+{% endblock %}
