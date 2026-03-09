@@ -1,29 +1,23 @@
-# config.py
-# ─────────────────────────────────────────────────────────────
-# PURPOSE: Central configuration for the Flask app.
-# Reads values from the .env file via python-dotenv.
-# All settings are stored here — never scattered in routes.
-# ─────────────────────────────────────────────────────────────
+import os       # lets you read environment variables
 
-import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv      # this function reads .env file
 
-# Load all variables from .env into the environment
 load_dotenv()
-
+# reads the .env file and loads all
+# KEY=VALUE pairs into environment variables
 
 class Config:
-    # ─────────────────────────────────────────────
-    # SECRET_KEY
-    # Used by Flask to sign session cookies securely.
-    # Must be a long random string in production.
-    # Reads from .env — falls back to 'dev-key' locally.
-    # ─────────────────────────────────────────────
-    SECRET_KEY = os.getenv('SECRET_KEY', 'dev-key-change-in-production')
 
-    # ─────────────────────────────────────────────
-    # DATABASE_URL
-    # PostgreSQL connection string.
-    # Will be used when database is added later.
-    # ─────────────────────────────────────────────
-    DATABASE_URL = os.getenv('DATABASE_URL', '')
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'fallback-key')
+    # reads SECRET_KEY from your .env file
+    # 'fallback-key' is used ONLY if SECRET_KEY is missing from .env (safety net)
+
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    # reads DATABASE_URL from your .env file
+    # this tells SQLAlchemy how to connect to PostgreSQL
+
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    # SQLAlchemy has a feature that tracks every
+    # object change in memory — it's slow and
+    # unnecessary, so we turn it off
+    # Flask will show a warning if you don't set this
