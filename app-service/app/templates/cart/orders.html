@@ -1,0 +1,108 @@
+<!-- app-service/app/templates/cart/orders.html -->
+{% extends "base.html" %}
+
+{% block title %}Order History — BookStore{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+
+    <h2 class="fw-bold mb-4">
+        <i class="bi bi-clock-history me-2"></i>Order History
+    </h2>
+
+    {% if orders %}
+
+        {% for order in orders %}
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-dark text-white d-flex
+                        justify-content-between align-items-center py-3">
+
+                <!-- Order ID + Date -->
+                <div>
+                    <span class="fw-bold">Order #{{ order.id }}</span>
+                    <span class="text-white-50 small ms-3">
+                        {{ order.created_at.strftime('%d %b %Y, %I:%M %p') }}
+                    </span>
+                </div>
+
+                <!-- Status Badge -->
+                <span class="badge
+                    {% if order.status == 'paid' %}bg-success
+                    {% elif order.status == 'pending' %}bg-warning text-dark
+                    {% else %}bg-secondary{% endif %}
+                    fs-6 px-3 py-2">
+                    {{ order.status | capitalize }}
+                </span>
+
+            </div>
+
+            <div class="card-body p-4">
+
+                <!-- Order Items Table -->
+                <table class="table table-borderless mb-3">
+                    <thead class="text-muted small text-uppercase">
+                        <tr>
+                            <th>Book</th>
+                            <th class="text-center">Qty</th>
+                            <th class="text-end">Unit Price</th>
+                            <th class="text-end">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order.items %}
+                        <tr>
+                            <td>
+                                <span class="fw-semibold">
+                                    Book #{{ item.book_id }}
+                                </span>
+                            </td>
+                            <td class="text-center">{{ item.quantity }}</td>
+                            <td class="text-end">
+                                £{{ "%.2f"|format(item.price_at_purchase) }}
+                            </td>
+                            <td class="text-end fw-bold">
+                                £{{ "%.2f"|format(item.price_at_purchase * item.quantity) }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <hr>
+
+                <!-- Order Total -->
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-muted small">
+                        {{ order.items | length }} item(s)
+                    </span>
+                    <div class="text-end">
+                        <span class="text-muted small me-2">Order Total:</span>
+                        <span class="fw-bold fs-5">
+                            £{{ "%.2f"|format(order.total_price) }}
+                        </span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        {% endfor %}
+
+    {% else %}
+
+        <!-- Empty State -->
+        <div class="text-center py-5">
+            <p class="fs-1">📦</p>
+            <h4 class="text-muted">No orders yet</h4>
+            <p class="text-muted mb-4">
+                Start browsing and place your first order!
+            </p>
+            <a href="{{ url_for('main.books') }}"
+               class="btn btn-dark btn-lg px-5">
+                <i class="bi bi-book me-2"></i>Browse Books
+            </a>
+        </div>
+
+    {% endif %}
+
+</div>
+{% endblock %}

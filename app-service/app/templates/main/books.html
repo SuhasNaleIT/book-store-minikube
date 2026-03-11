@@ -1,0 +1,164 @@
+<!-- app-service/app/templates/main/books.html -->
+{% extends "base.html" %}
+
+{% block title %}Books Catalogue — BookStore{% endblock %}
+
+{% block content %}
+
+<!-- HERO BANNER -->
+<div class="container my-5 p-4 bg-gradient bg-dark text-white rounded shadow-sm">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-7">
+                <h1 class="fw-bold mb-1">
+                    <i class="bi bi-book me-2"></i>
+                    <i class="bi bi-journal-bookmark me-2"></i>
+                    <i class="bi bi-collection me-2"></i>
+                    Catalogue
+                </h1>
+                <p class="mb-0 text-white-50">
+                    Browse our collection. No account needed to explore.
+                </p>
+            </div>
+            <div class="col-md-1"></div>
+            <div class="col-md-4 mt-3 mt-md-0">
+                <input
+                    type="text"
+                    id="searchInput"
+                    class="form-control form-control-lg"
+                    placeholder="Search by title or author..."
+                    onkeyup="filterBooks()"
+                >
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mb-5">
+
+    <p class="text-muted mb-3">
+        Showing <strong id="bookCount">{{ books|length }}</strong> book(s)
+    </p>
+
+    {% if books %}
+        <div class="row g-4" id="booksGrid">
+            {% for book in books %}
+            <div class="col-sm-12 col-md-6 col-lg-4 book-card-wrapper">
+                <div class="card h-100 shadow-sm border-0">
+
+                    <!-- Book Cover -->
+                    <div class="card-img-top d-flex align-items-center
+                                justify-content-center text-white fw-bold fs-4 book-cover"
+                         data-color="{{ book.cover|default('#6c757d') }}"
+                         style="height: 180px; letter-spacing: 1px;">
+                        {{ book.title[:2].upper() }}
+                    </div>
+
+                    <div class="card-body d-flex flex-column">
+
+                        <!-- Stock badge -->
+                        <div class="mb-2">
+                            {% if book.stock > 0 %}
+                                <span class="badge bg-success">In Stock ({{ book.stock }})</span>
+                            {% else %}
+                                <span class="badge bg-danger">Out of Stock</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Title -->
+                        <h5 class="card-title fw-bold mb-1 book-title">
+                            {{ book.title }}
+                        </h5>
+
+                        <!-- Author -->
+                        <p class="text-muted small mb-2 book-author">
+                            by {{ book.author }}
+                        </p>
+
+                        <!-- Description -->
+                        {% if book.description %}
+                            <p class="card-text small text-secondary flex-grow-1">
+                                {{ book.description[:80] }}
+                                {% if book.description|length > 80 %}...{% endif %}
+                            </p>
+                        {% endif %}
+
+                        <!-- Price -->
+                        <p class="fw-bold fs-5 mt-2 mb-3" style="color: #2c3e50;">
+                            £{{ "%.2f"|format(book.price|float) }}
+                        </p>
+
+                        <!-- Buttons -->
+                        <div class="d-flex gap-2 mt-auto">
+                            <a href="{{ url_for('main.book_detail', book_id=book.id) }}"
+                               class="btn btn-outline-dark btn-sm flex-fill">
+                                View Details
+                            </a>
+
+                            <!-- Add to Cart -->
+                            {% if book.stock > 0 %}
+                                {% if current_user.is_authenticated %}
+                                    <form method="POST"
+                                          action="{{ url_for('cart.add_to_cart', book_id=book.id) }}"
+                                          class="flex-fill">
+                                        <button type="submit" class="btn btn-dark btn-sm w-100">
+                                            <i class="bi bi-cart-plus me-1"></i>Add to Cart
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <a href="{{ url_for('auth.login') }}?next={{ request.path }}"
+                                       class="btn btn-dark btn-sm flex-fill">
+                                        <i class="bi bi-cart-plus me-1"></i>Add to Cart
+                                    </a>
+                                {% endif %}
+                            {% else %}
+                                <button class="btn btn-secondary btn-sm flex-fill" disabled>
+                                    Unavailable
+                                </button>
+                            {% endif %}
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+    {% else %}
+        <div class="text-center py-5">
+            <p class="fs-1">📭</p>
+            <h4 class="text-muted">No books available right now.</h4>
+            <p class="text-muted">Check back soon — we are adding new titles!</p>
+        </div>
+    {% endif %}
+
+</div>
+
+<script>
+document.querySelectorAll('.book-cover').forEach(function(el) {
+    const color = el.getAttribute('data-color');
+    if (color) el.style.backgroundColor = color;
+});
+
+function filterBooks() {
+    const query = document.getElementById('searchInput').value.toLowerCase();
+    const cards = document.querySelectorAll('.book-card-wrapper');
+    let visibleCount = 0;
+
+    cards.forEach(function(card) {
+        const title  = card.querySelector('.book-title').textContent.toLowerCase();
+        const author = card.querySelector('.book-author').textContent.toLowerCase();
+
+        if (title.includes(query) || author.includes(query)) {
+            card.style.display = '';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    document.getElementById('bookCount').textContent = visibleCount;
+}
+</script>
+
+{% endblock %}
