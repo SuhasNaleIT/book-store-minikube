@@ -88,10 +88,10 @@
                             £{{ "%.2f"|format(book.price|float) }}
                         </p>
 
-                        <!-- Buttons -->
+                       <!-- Buttons -->
                         <div class="d-flex gap-2 mt-auto">
                             <a href="{{ url_for('main.book_detail', book_id=book.id) }}"
-                               class="btn btn-outline-dark btn-sm flex-fill">
+                            class="btn btn-outline-dark btn-sm flex-fill">
                                 View Details
                             </a>
 
@@ -99,15 +99,18 @@
                             {% if book.stock > 0 %}
                                 {% if current_user.is_authenticated %}
                                     <form method="POST"
-                                          action="{{ url_for('cart.add_to_cart', book_id=book.id) }}"
-                                          class="flex-fill">
+                                        action="{{ url_for('cart.add_to_cart', book_id=book.id) }}"
+                                        class="flex-fill">
+
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
                                         <button type="submit" class="btn btn-dark btn-sm w-100">
                                             <i class="bi bi-cart-plus me-1"></i>Add to Cart
                                         </button>
                                     </form>
                                 {% else %}
                                     <a href="{{ url_for('auth.login') }}?next={{ request.path }}"
-                                       class="btn btn-dark btn-sm flex-fill">
+                                    class="btn btn-dark btn-sm flex-fill">
                                         <i class="bi bi-cart-plus me-1"></i>Add to Cart
                                     </a>
                                 {% endif %}
@@ -118,6 +121,7 @@
                             {% endif %}
 
                         </div>
+
                     </div>
                 </div>
             </div>

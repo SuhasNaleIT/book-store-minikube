@@ -112,8 +112,11 @@
                         <span>£{{ "%.2f"|format(total) }}</span>
                     </div>
 
-                    <!-- Place Order button -->
+                   <!-- Place Order button -->
                     <form method="POST" action="{{ url_for('cart.process_payment') }}">
+
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
                         <div class="d-grid">
                             <button type="submit" class="btn btn-dark btn-lg">
                                 <i class="bi bi-lock-fill me-2"></i>

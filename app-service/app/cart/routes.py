@@ -214,6 +214,7 @@ def process_payment():
             "author":            book["author"],
             "quantity":          quantity,
             "price_at_purchase": book["price"],
+            "price":             book["price"],
             "subtotal":          round(subtotal, 2)
         })
 

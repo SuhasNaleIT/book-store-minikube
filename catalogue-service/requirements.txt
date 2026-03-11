@@ -1,0 +1,15 @@
+# ── Core Framework ────────────────────────────────────────────
+Flask==3.1.3                # web framework
+Flask-SQLAlchemy==3.1.1     # database ORM
+Flask-Migrate==4.1.0        # DB migrations (new — needed for admin book management)
+
+# ── Database ──────────────────────────────────────────────────
+psycopg2-binary==2.9.11     # PostgreSQL driver
+
+# ── Utilities ─────────────────────────────────────────────────
+python-dotenv==1.2.1        # reads .env file
+gunicorn==25.1.0            # production server
+
+# ── Testing ───────────────────────────────────────────────────
+pytest==8.3.4               # test runner
+pytest-flask==1.3.0         # Flask test helpers
