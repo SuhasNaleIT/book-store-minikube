@@ -1,3 +1,4 @@
+import time
 from flask import Flask, jsonify
 from .extensions import db, migrate
 from config import get_config
@@ -21,11 +22,9 @@ def create_app(test_config=None):
     from .catalogue.routes import catalogue
     app.register_blueprint(catalogue)
 
-    # ── Create tables + seed data ─────────────────────────────
+    # ── Create tables + seed with retry ───────────────────────
     with app.app_context():
-        db.create_all()
-        if not test_config:       
-            _seed_books()
+        _init_db(app, test_config)
 
     # ── Health check endpoint ─────────────────────────────────
     @app.route("/health")
@@ -45,9 +44,31 @@ def create_app(test_config=None):
 
 
 # ─────────────────────────────────────────────────────────────
+# DB INIT WITH RETRY
+# Docker starts containers in order but PostgreSQL needs a few
+# extra seconds to be truly ready — this retries instead of
+# crashing immediately on startup.
+# ─────────────────────────────────────────────────────────────
+def _init_db(app, test_config=None):
+    retries = 5
+    for attempt in range(retries):
+        try:
+            db.create_all()
+            if not test_config:         # skip seeding during tests
+                _seed_books()
+            return
+        except Exception as e:
+            if attempt < retries - 1:
+                print(f"DB not ready (attempt {attempt + 1}/{retries}) — retrying in 3s... {e}")
+                time.sleep(3)
+            else:
+                print("Could not connect to database after retries.")
+                raise
+
+
+# ─────────────────────────────────────────────────────────────
 # SEED DATA
 # Runs once on startup — only inserts if table is empty.
-# This is where ALL book data comes from initially.
 # ─────────────────────────────────────────────────────────────
 def _seed_books():
     from .models import Book

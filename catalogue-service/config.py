@@ -1,27 +1,22 @@
-# catalogue-service/config.py
-
 import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Explicitly load .env from catalogue-service directory only
-# Prevents picking up parent directory .env files (e.g. monolith)
-load_dotenv(dotenv_path=Path(__file__).parent / ".env", override=True)
+load_dotenv(dotenv_path=Path(__file__).parent / ".env", override=False)
 
 
 class Config:
-    # ── Security ──────────────────────────────────────────────
-    SECRET_KEY = os.environ.get("SECRET_KEY", "fallback-dev-secret")
-
-    # ── Database ──────────────────────────────────────────────
-    SQLALCHEMY_DATABASE_URI = os.environ.get(
+    SECRET_KEY                     = os.environ.get("SECRET_KEY", "fallback-dev-secret")
+    SQLALCHEMY_DATABASE_URI        = os.environ.get(
         "DATABASE_URL",
         "postgresql://bookstore_user:bookstore_pass@localhost:5433/catalogue_db"
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-
-    # ── API behaviour ─────────────────────────────────────────
-    JSON_SORT_KEYS = False          # preserve field order in JSON responses
+    SQLALCHEMY_ENGINE_OPTIONS      = {
+        "pool_pre_ping": True,      # retries dropped connections — critical for Docker
+        "pool_recycle":  300,       # recycles connections every 5 mins
+    }
+    JSON_SORT_KEYS                 = False
 
 
 class DevelopmentConfig(Config):
@@ -29,10 +24,8 @@ class DevelopmentConfig(Config):
 
 
 class TestingConfig(Config):
-    TESTING = True
-    DEBUG   = True
-
-    # ── Isolated in-memory test DB ────────────────────────────
+    TESTING                 = True
+    DEBUG                   = True
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
 
 
@@ -40,12 +33,12 @@ class ProductionConfig(Config):
     DEBUG = False
 
 
-# ── Config selector ───────────────────────────────────────────
 config_map = {
     "development": DevelopmentConfig,
     "testing":     TestingConfig,
     "production":  ProductionConfig,
 }
+
 
 def get_config():
     env = os.environ.get("FLASK_ENV", "development")

@@ -2,7 +2,7 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# No apt-get needed — psycopg2-binary is pre-compiled
+# No apt-get needed — psycopg2-binary is pre-compiled 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
@@ -13,4 +13,4 @@ USER appuser
 
 EXPOSE 8000
 
-CMD ["gunicorn", "-w", "2", "-b", "0.0.0.0:8000","--forwarded-allow-ips=*", "run:app"]
+CMD ["gunicorn", "-w", "2", "-b", "0.0.0.0:8000", "--forwarded-allow-ips=*", "run:app"]

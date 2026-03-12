@@ -38,7 +38,7 @@
                                     <!-- Title + Author -->
                                     <div class="col-md-5">
                                         <h6 class="fw-bold mb-1">
-                                            <!-- ✅ FIXED: no book_detail route in app-service -->
+                                            <!-- FIXED: no book_detail route in app-service -->
                                             {{ item.book.title }}
                                         </h6>
                                         <p class="text-muted small mb-0">
@@ -49,25 +49,28 @@
                                         </p>
                                     </div>
 
-                                    <!-- Quantity Update Form -->
+                                  <!-- Quantity Update Form -->
                                     <div class="col-md-4 mt-2 mt-md-0">
                                         <form method="POST"
-                                              action="{{ url_for('cart.update_quantity', book_id=item.book.id) }}"
-                                              class="d-flex align-items-center gap-2">
-                                            <!-- ✅ FIXED: item_id=item.id → book_id=item.book.id -->
+                                            action="{{ url_for('cart.update_quantity', book_id=item.book.id) }}"
+                                            class="d-flex align-items-center gap-2">
+
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
                                             <label class="text-muted small me-1">Qty:</label>
                                             <input type="number"
-                                                   name="quantity"
-                                                   value="{{ item.quantity }}"
-                                                   min="0" max="99"
-                                                   class="form-control form-control-sm"
-                                                   style="width: 70px;">
+                                                name="quantity"
+                                                value="{{ item.quantity }}"
+                                                min="0" max="99"
+                                                class="form-control form-control-sm"
+                                                style="width: 70px;">
                                             <button type="submit"
                                                     class="btn btn-outline-secondary btn-sm">
                                                 Update
                                             </button>
                                         </form>
                                     </div>
+
 
                                     <!-- Subtotal + Remove -->
                                     <div class="col-md-3 mt-2 mt-md-0 text-md-end">
