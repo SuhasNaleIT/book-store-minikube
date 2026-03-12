@@ -101,7 +101,7 @@ services:
       FLASK_DEBUG:            0
       SECRET_KEY:             bookstore_secret_key
       DATABASE_URL:           postgresql://bookstore_user:bookstore_pass@app-db:5432/app_db
-      CATALOGUE_SERVICE_URL:  http://catalogue-service:5000
+      CATALOGUE_SERVICE_URL:  http://catalogue-service:8000
       #                                  ↑
       #                    container name = hostname on bookstore-net
     ports:
