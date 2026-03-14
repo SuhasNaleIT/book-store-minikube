@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: catalogue-service
-        image: 985317222363.dkr.ecr.eu-west-2.amazonaws.com/bookstore/catalogue-service:latest
+        image: 985317222363.dkr.ecr.eu-west-2.amazonaws.com/bookstore/catalogue-service:v1
         ports:
         - containerPort: 5002          # ← correct port from run.py
         env:

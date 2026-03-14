@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
       - name: app-service
-        image: 985317222363.dkr.ecr.eu-west-2.amazonaws.com/bookstore/app-service:latest
+        image: 985317222363.dkr.ecr.eu-west-2.amazonaws.com/bookstore/app-service:v1
         ports:
         - containerPort: 5001          # ← correct port from run.py
         env:
