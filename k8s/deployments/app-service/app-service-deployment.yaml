@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-service
+  namespace: bookstore
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: app-service
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: app-service
+    spec:
+      containers:
+      - name: app-service
+        image: 985317222363.dkr.ecr.eu-west-2.amazonaws.com/bookstore/app-service:latest
+        ports:
+        - containerPort: 5001          # ← correct port from run.py
+        env:
+        - name: DATABASE_URL           # ← matches config.py exactly
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: app-database-url
+        - name: CATALOGUE_SERVICE_URL  # ← matches config.py exactly
+          valueFrom:
+            configMapKeyRef:
+              name: bookstore-config
+              key: CATALOGUE_SERVICE_URL
+        - name: FLASK_ENV              # ← uses ProductionConfig
+          valueFrom:
+            configMapKeyRef:
+              name: bookstore-config
+              key: FLASK_ENV
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: app-db-password     # reusing as secret key
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5001
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5001
+          initialDelaySeconds: 10
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-service
+  namespace: bookstore
+spec:
+  selector:
+    app: app-service
+  ports:
+  - port: 80
+    targetPort: 5001
+  type: ClusterIP

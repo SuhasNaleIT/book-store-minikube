@@ -95,6 +95,11 @@ def create_app(test_config=None):
         cart  = session.get("cart", {})
         count = sum(cart.values()) if cart else 0
         return dict(cart_item_count=count)
+    
+     # ── Health check endpoint ─────────────────────────────────
+    @app.route("/health")
+    def health():
+        return {"status": "ok", "service": "app-service"}, 200
 
     # ── Custom error pages ────────────────────────────────────
     @app.errorhandler(404)
