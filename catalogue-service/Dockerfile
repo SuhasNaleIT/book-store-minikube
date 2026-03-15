@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM --platform=linux/amd64 python:3.11-slim
 
 WORKDIR /app
 
@@ -13,4 +13,4 @@ USER appuser
 
 EXPOSE 8000
 
-CMD ["gunicorn", "-w", "2", "-b", "0.0.0.0:8000", "--forwarded-allow-ips=*", "run:app"]
+CMD ["gunicorn", "-w", "2", "-b", "0.0.0.0:8000", "--forwarded-allow-ips=*",  "run:app"]
