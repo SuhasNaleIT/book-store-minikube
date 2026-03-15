@@ -22,7 +22,7 @@ spec:
       - name: app-service
         image: 985317222363.dkr.ecr.eu-west-2.amazonaws.com/bookstore/app-service:v1
         ports:
-        - containerPort: 5001          # ← correct port from run.py
+        - containerPort: 8000          # ← correct port from run.py
         env:
         - name: DATABASE_URL           # ← matches config.py exactly
           valueFrom:
@@ -54,13 +54,13 @@ spec:
         livenessProbe:
           httpGet:
             path: /health
-            port: 5001
+            port: 8000
           initialDelaySeconds: 30
           periodSeconds: 10
         readinessProbe:
           httpGet:
             path: /health
-            port: 5001
+            port: 8000
           initialDelaySeconds: 10
           periodSeconds: 5
 ---
@@ -74,5 +74,5 @@ spec:
     app: app-service
   ports:
   - port: 80
-    targetPort: 5001
+    targetPort: 8000
   type: ClusterIP
