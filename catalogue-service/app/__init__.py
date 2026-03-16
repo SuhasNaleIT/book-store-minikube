@@ -1,3 +1,4 @@
+import os
 import time
 from flask import Flask, jsonify
 from .extensions import db, migrate
@@ -29,8 +30,12 @@ def create_app(test_config=None):
     # ── Health check endpoint ─────────────────────────────────
     @app.route("/health")
     def health():
-        return jsonify({"status": "ok", "service": "catalogue-service"}), 200
-
+        return jsonify({
+            "status": "ok",
+            "service": "catalogue-service",
+            "version": os.getenv("APP_VERSION", "v1")
+        }), 200
+    
     # ── Error handlers ────────────────────────────────────────
     @app.errorhandler(404)
     def not_found(e):

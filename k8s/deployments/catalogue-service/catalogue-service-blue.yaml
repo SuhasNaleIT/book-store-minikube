@@ -21,6 +21,8 @@ spec:
         ports:
         - containerPort: 8000          # ← correct port from run.py
         env:
+        - name: APP_VERSION
+          value: "v1"                  # ← Update the Version before deployment
         - name: DATABASE_URL           # ← matches config.py exactly
           valueFrom:
             secretKeyRef:

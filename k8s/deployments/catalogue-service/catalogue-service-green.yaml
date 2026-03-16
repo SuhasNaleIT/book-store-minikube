@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalogue-service-green
+  namespace: bookstore
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: catalogue-service
+      version: green
+  template:
+    metadata:
+      labels:
+        app: catalogue-service
+        version: green
+    spec:
+      containers:
+      - name: catalogue-service
+        image: 985317222363.dkr.ecr.eu-west-2.amazonaws.com/bookstore/catalogue-service:v2
+        ports:
+        - containerPort: 8000
+        env:
+        - name: APP_VERSION
+          value: "v2"                  # ← Update the Version before deployment
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: catalogue-database-url
+        - name: FLASK_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: bookstore-config
+              key: FLASK_ENV
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
