@@ -1,7 +1,8 @@
+import os
 import time
 import requests
 from flask import (
-    Flask, Blueprint, render_template, flash,
+    Flask, Blueprint, jsonify, render_template, flash,
     request, current_app, session, redirect, url_for
 )
 from .extensions import db, login_manager, bcrypt, csrf
@@ -99,8 +100,11 @@ def create_app(test_config=None):
      # ── Health check endpoint ─────────────────────────────────
     @app.route("/health")
     def health():
-        return {"status": "ok", "service": "app-service"}, 200
-
+        return jsonify({
+            "status": "ok",
+            "service": "app-service",
+            "version": os.getenv("APP_VERSION", "v1")
+        }), 200
     # ── Custom error pages ────────────────────────────────────
     @app.errorhandler(404)
     def not_found(e):
