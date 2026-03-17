@@ -143,7 +143,7 @@ def _seed_books():
         {
             "title":       "Dune",
             "author":      "Frank Herbert",
-            "price":       10.99,
+            "price":       11.99,
             "stock":       7,
             "cover":       "#1abc9c",
             "isbn":        "978-0441013593",

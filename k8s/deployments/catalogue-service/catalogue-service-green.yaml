@@ -17,12 +17,12 @@ spec:
     spec:
       containers:
       - name: catalogue-service
-        image: 985317222363.dkr.ecr.eu-west-2.amazonaws.com/bookstore/catalogue-service:v2
+        image: 985317222363.dkr.ecr.eu-west-2.amazonaws.com/bookstore/catalogue-service:v4
         ports:
         - containerPort: 8000
         env:
         - name: APP_VERSION
-          value: "v2"                  # ← Update the Version before deployment
+          value: "v4"                  # ← Update the Version before deployment
         - name: DATABASE_URL
           valueFrom:
             secretKeyRef:
