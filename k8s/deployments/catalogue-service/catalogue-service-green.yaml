@@ -17,7 +17,8 @@ spec:
     spec:
       containers:
       - name: catalogue-service
-        image: 985317222363.dkr.ecr.eu-west-2.amazonaws.com/bookstore/catalogue-service:v4
+        image: catalogue-service:v2
+        imagePullPolicy: Never
         ports:
         - containerPort: 8000
         env:

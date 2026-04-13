@@ -4,21 +4,20 @@ metadata:
   name: bookstore-ingress
   namespace: bookstore
   annotations:
-    alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/target-type: ip
+    nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
-  ingressClassName: alb
+  ingressClassName: nginx              
   rules:
   - http:
       paths:
-      - path: /api         
+      - path: /api/books               
         pathType: Prefix
         backend:
           service:
             name: catalogue-service
             port:
               number: 80
-      - path: /             
+      - path: /            
         pathType: Prefix
         backend:
           service:
