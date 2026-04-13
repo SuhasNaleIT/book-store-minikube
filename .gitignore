@@ -18,4 +18,8 @@ __pycache__/
 # Migrations (auto-generated later)
 instance/
 
-.vscode/
+# Minikube / Local
+*.tar
+docker-compose.override.yml
+kubeconfig.local
+velero-credentials
