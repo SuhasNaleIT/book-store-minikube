@@ -57,7 +57,7 @@ spec:
       name: catalogue-db-storage
     spec:
       accessModes: ["ReadWriteOnce"]
-      storageClassName: ebs-sc
+      storageClassName: standard
       resources:
         requests:
           storage: 5Gi

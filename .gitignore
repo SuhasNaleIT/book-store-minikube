@@ -23,3 +23,4 @@ instance/
 docker-compose.override.yml
 kubeconfig.local
 velero-credentials
+k8s/database/db-secret.yaml
