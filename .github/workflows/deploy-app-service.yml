@@ -1,0 +1,76 @@
+name: Deploy App-Service to EKS
+
+on:
+  push:
+    branches:
+      - microservices-split
+    paths:
+      - 'app-service/**'        # only triggers when app-service code changes
+
+env:
+  AWS_REGION:     eu-west-2
+  ECR_REGISTRY:   985317222363.dkr.ecr.eu-west-2.amazonaws.com
+  ECR_REPOSITORY: bookstore/app-service
+  EKS_CLUSTER:    bookstore-cluster
+  DEPLOYMENT:     app-service
+  NAMESPACE:      bookstore
+  CONTAINER:      app-service
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Checkout code ────────────────────────────────────
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ── 2. Configure AWS credentials ────────────────────────
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region:            ${{ env.AWS_REGION }}
+
+      # ── 3. Login to ECR ─────────────────────────────────────
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # ── 4. Build and push Docker image ──────────────────────
+      - name: Build and push image to ECR
+        id: build-image
+        env:
+          IMAGE_TAG: ${{ github.sha }}   # unique tag per commit
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./app-service
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      # ── 5. Update kubeconfig for EKS ────────────────────────
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig \
+            --region ${{ env.AWS_REGION }} \
+            --name ${{ env.EKS_CLUSTER }}
+
+      # ── 6. Deploy to Kubernetes ─────────────────────────────
+      - name: Deploy to EKS
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          kubectl set image deployment/${{ env.DEPLOYMENT }} \
+            ${{ env.CONTAINER }}=${{ steps.build-image.outputs.image }} \
+            -n ${{ env.NAMESPACE }}
+          kubectl rollout status deployment/${{ env.DEPLOYMENT }} \
+            -n ${{ env.NAMESPACE }} \
+            --timeout=120s
+
+      # ── 7. Rollback if deploy fails ─────────────────────────
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          kubectl rollout undo deployment/${{ env.DEPLOYMENT }} \
+            -n ${{ env.NAMESPACE }}
+          echo "❌ Deployment failed — rolled back to previous version"

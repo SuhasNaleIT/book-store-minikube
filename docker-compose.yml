@@ -1,0 +1,116 @@
+# bookstore/docker-compose.yml
+
+version: "3.9"
+
+# ── Shared private network ─────────────────────────────────────
+# All containers join this network automatically.
+# They talk to each other using service names as hostnames.
+networks:
+  bookstore-net:
+    driver: bridge
+
+# ── Named volumes for database persistence ─────────────────────
+# Without this, all data is lost when containers restart.
+volumes:
+  app_db_data:
+  catalogue_db_data:
+
+
+services:
+
+  # ────────────────────────────────────────────────────────────
+  # DATABASE: app-db
+  # PostgreSQL for app-service (users, orders, order items)
+  # ────────────────────────────────────────────────────────────
+  app-db:
+    image: postgres:15-alpine          # official lightweight postgres image
+    container_name: app-db
+    environment:
+      POSTGRES_USER:     bookstore_user
+      POSTGRES_PASSWORD: bookstore_pass
+      POSTGRES_DB:       app_db
+    volumes:
+      - app_db_data:/var/lib/postgresql/data   # persist data across restarts
+    networks:
+      - bookstore-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bookstore_user -d app_db"]
+      interval: 5s
+      timeout:  5s
+      retries:  5
+
+
+  # ────────────────────────────────────────────────────────────
+  # DATABASE: catalogue-db
+  # PostgreSQL for catalogue-service (books + stock)
+  # ────────────────────────────────────────────────────────────
+  catalogue-db:
+    image: postgres:15-alpine
+    container_name: catalogue-db
+    environment:
+      POSTGRES_USER:     bookstore_user
+      POSTGRES_PASSWORD: bookstore_pass
+      POSTGRES_DB:       catalogue_db
+    volumes:
+      - catalogue_db_data:/var/lib/postgresql/data
+    networks:
+      - bookstore-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bookstore_user -d catalogue_db"]
+      interval: 5s
+      timeout:  5s
+      retries:  5
+
+
+  # ────────────────────────────────────────────────────────────
+  # SERVICE: catalogue-service
+  # Starts BEFORE app-service (app-service depends on it)
+  # ────────────────────────────────────────────────────────────
+  catalogue-service:
+    build:
+      context: ./catalogue-service    # where the Dockerfile lives
+      dockerfile: Dockerfile
+    container_name: catalogue-service
+    environment:
+      FLASK_DEBUG:  0                 # never debug mode in containers
+      SECRET_KEY:   bookstore_secret_key
+      DATABASE_URL: postgresql://bookstore_user:bookstore_pass@catalogue-db:5432/catalogue_db
+      #                                                         ↑
+      #                               service name replaces localhost
+    ports:
+      - "5002:8000"                   # host:container
+      #  ↑ your browser          ↑ inside container always 5000
+    depends_on:
+      catalogue-db:
+        condition: service_healthy    # waits for DB healthcheck to pass
+    networks:
+      - bookstore-net
+    restart: unless-stopped
+
+
+  # ────────────────────────────────────────────────────────────
+  # SERVICE: app-service
+  # Starts LAST — depends on catalogue-service + app-db
+  # ────────────────────────────────────────────────────────────
+  app-service:
+    build:
+      context: ./app-service
+      dockerfile: Dockerfile
+    container_name: app-service
+    environment:
+      FLASK_DEBUG:            0
+      SECRET_KEY:             bookstore_secret_key
+      DATABASE_URL:           postgresql://bookstore_user:bookstore_pass@app-db:5432/app_db
+      CATALOGUE_SERVICE_URL:  http://catalogue-service:8000
+      #                                  ↑
+      #                    container name = hostname on bookstore-net
+    ports:
+      - "5001:8000"
+    depends_on:
+      app-db:
+        condition: service_healthy
+      catalogue-service:
+        condition: service_started
+    networks:
+      - bookstore-net
+    restart: unless-stopped

@@ -17,3 +17,10 @@ __pycache__/
 
 # Migrations (auto-generated later)
 instance/
+
+# Minikube / Local
+*.tar
+docker-compose.override.yml
+kubeconfig.local
+velero-credentials
+k8s/database/db-secret.yaml
