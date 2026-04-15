@@ -71,14 +71,12 @@ spec:
         }
 
         stage('Deploy to Kubernetes') {
-            container('kubectl') {
-                steps {
-                    echo 'Deploying to Kubernetes...'
+            steps {
+                container('kubectl') {
                     withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                         sh """
                             kubectl set image deployment/app-service \
                                 app-service=${APP_IMAGE} -n bookstore
-
                             kubectl set image deployment/catalogue-service-blue \
                                 catalogue-service=${CATALOGUE_IMAGE} -n bookstore
                         """
@@ -88,9 +86,8 @@ spec:
         }
 
         stage('Verify Deployment') {
-            container('kubectl') {
-                steps {
-                    echo 'Verifying pods...'
+            steps {
+                container('kubectl') {
                     withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                         sh """
                             kubectl rollout status deployment/app-service -n bookstore
