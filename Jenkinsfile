@@ -70,7 +70,7 @@ spec:
             steps {
                 sh """
                     apk add --no-cache curl
-                    curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.29.0/bin/linux/aarch64/kubectl
+                    curl -LO https://dl.k8s.io/release/v1.29.0/bin/linux/arm64/kubectl
                     chmod +x ./kubectl
 
                     ./kubectl set image deployment/app-service \
