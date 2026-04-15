@@ -7,7 +7,7 @@ kind: Pod
 spec:
   containers:
   - name: builder
-    image: alpine/k8s:1.29.2
+    image: docker:27-cli
     command: ['cat']
     tty: true
     volumeMounts:
@@ -43,7 +43,6 @@ spec:
 
         stage('Build Images') {
             steps {
-                echo 'Building Docker images...'
                 sh """
                     docker build -t ${APP_IMAGE} ./app-service
                     docker build -t ${CATALOGUE_IMAGE} ./catalogue-service
@@ -53,7 +52,6 @@ spec:
 
         stage('Push to Docker Hub') {
             steps {
-                echo 'Pushing to Docker Hub...'
                 withCredentials([usernamePassword(
                     credentialsId: 'dockerhub-credentials',
                     usernameVariable: 'DOCKER_USER',
@@ -72,13 +70,17 @@ spec:
             steps {
                 withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                     sh """
-                        kubectl --kubeconfig=\$KUBECONFIG \
+                        apk add --no-cache curl
+                        curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.29.0/bin/linux/amd64/kubectl
+                        chmod +x ./kubectl
+
+                        ./kubectl --kubeconfig=\$KUBECONFIG \
                             --server=https://kubernetes.default.svc \
                             --insecure-skip-tls-verify=true \
                             set image deployment/app-service \
                             app-service=${APP_IMAGE} -n bookstore
 
-                        kubectl --kubeconfig=\$KUBECONFIG \
+                        ./kubectl --kubeconfig=\$KUBECONFIG \
                             --server=https://kubernetes.default.svc \
                             --insecure-skip-tls-verify=true \
                             set image deployment/catalogue-service-blue \
@@ -92,12 +94,12 @@ spec:
             steps {
                 withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                     sh """
-                        kubectl --kubeconfig=\$KUBECONFIG \
+                        ./kubectl --kubeconfig=\$KUBECONFIG \
                             --server=https://kubernetes.default.svc \
                             --insecure-skip-tls-verify=true \
                             rollout status deployment/app-service -n bookstore
 
-                        kubectl --kubeconfig=\$KUBECONFIG \
+                        ./kubectl --kubeconfig=\$KUBECONFIG \
                             --server=https://kubernetes.default.svc \
                             --insecure-skip-tls-verify=true \
                             rollout status deployment/catalogue-service-blue -n bookstore
