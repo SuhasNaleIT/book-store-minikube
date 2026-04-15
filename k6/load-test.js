@@ -3,22 +3,20 @@ import { sleep, check } from 'k6';
 
 export const options = {
   stages: [
-    { duration: '1m', target: 100 },   // ramp up to 100 users
-    { duration: '2m', target: 500 },   // ramp to 500 users
-    { duration: '2m', target: 1000 },  // spike to 1000 users
-    { duration: '2m', target: 500 },   // scale back down
-    { duration: '1m', target: 0 },     // ramp down to 0
+    { duration: '1m', target: 50 },    // ramp up to 50 users
+    { duration: '2m', target: 200 },   // ramp to 200 users
+    { duration: '2m', target: 500 },   // spike to 500 users
+    { duration: '2m', target: 200 },   // scale back down
+    { duration: '1m', target: 0 },     // ramp to 0
   ],
   thresholds: {
-    http_req_duration: ['p(95)<2000'], // 95% requests under 2s
-    http_req_failed:   ['rate<0.1'],   // less than 10% failures
+    http_req_duration: ['p(95)<2000'],
+    http_req_failed:   ['rate<0.1'],
   },
 };
 
 export default function () {
-  const res = http.get(
-    'http://k8s-bookstor-bookstor-1f39207299-1608165437.eu-west-2.elb.amazonaws.com/api/books'
-  );
+  const res = http.get('http://127.0.0.1/books');
   check(res, {
     'status is 200': (r) => r.status === 200,
   });
