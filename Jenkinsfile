@@ -29,7 +29,7 @@ spec:
     }
 
     environment {
-        DOCKER_HUB_USER = 'YOUR_DOCKERHUB_USERNAME'
+        DOCKER_HUB_USER = 'c5053699'
         APP_IMAGE       = "${DOCKER_HUB_USER}/app-service:${BUILD_NUMBER}"
         CATALOGUE_IMAGE = "${DOCKER_HUB_USER}/catalogue-service:${BUILD_NUMBER}"
     }
