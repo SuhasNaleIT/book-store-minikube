@@ -6,35 +6,26 @@ apiVersion: v1
 kind: Pod
 spec:
   containers:
-  - name: docker
-    image: docker:24-dind
-    securityContext:
-      privileged: true
-    env:
-    - name: DOCKER_TLS_CERTDIR
-      value: ""
-    - name: DOCKER_HOST
-      value: "tcp://localhost:2375"
-    volumeMounts:
-    - name: docker-graph-storage
-      mountPath: /var/lib/docker
   - name: builder
     image: docker:24-cli
     command: ['cat']
     tty: true
-    env:
-    - name: DOCKER_HOST
-      value: "tcp://localhost:2375"
     volumeMounts:
+    - name: docker-sock
+      mountPath: /var/run/docker.sock
     - name: workspace-volume
       mountPath: /home/jenkins/agent
   - name: kubectl
     image: bitnami/kubectl:latest
     command: ['cat']
     tty: true
+    volumeMounts:
+    - name: workspace-volume
+      mountPath: /home/jenkins/agent
   volumes:
-  - name: docker-graph-storage
-    emptyDir: {}
+  - name: docker-sock
+    hostPath:
+      path: /var/run/docker.sock
   - name: workspace-volume
     emptyDir: {}
 """
@@ -46,7 +37,6 @@ spec:
         DOCKER_HUB_USER = 'c5053699'
         APP_IMAGE       = "${DOCKER_HUB_USER}/app-service:${BUILD_NUMBER}"
         CATALOGUE_IMAGE = "${DOCKER_HUB_USER}/catalogue-service:${BUILD_NUMBER}"
-        DOCKER_HOST     = 'tcp://localhost:2375'
     }
 
     stages {
@@ -62,8 +52,6 @@ spec:
             steps {
                 echo 'Building Docker images...'
                 sh """
-                    sleep 5
-                    docker info
                     docker build -t ${APP_IMAGE} ./app-service
                     docker build -t ${CATALOGUE_IMAGE} ./catalogue-service
                 """
@@ -79,7 +67,7 @@ spec:
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
                     sh """
-                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                        echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin
                         docker push ${APP_IMAGE}
                         docker push ${CATALOGUE_IMAGE}
                     """
