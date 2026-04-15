@@ -7,19 +7,12 @@ kind: Pod
 spec:
   containers:
   - name: builder
-    image: docker:27-cli
+    image: alpine/k8s:1.29.2
     command: ['cat']
     tty: true
     volumeMounts:
     - name: docker-sock
       mountPath: /var/run/docker.sock
-    - name: workspace-volume
-      mountPath: /home/jenkins/agent
-  - name: kubectl
-    image: bitnami/kubectl:latest
-    command: ['cat']
-    tty: true
-    volumeMounts:
     - name: workspace-volume
       mountPath: /home/jenkins/agent
   volumes:
@@ -77,28 +70,38 @@ spec:
 
         stage('Deploy to Kubernetes') {
             steps {
-                container('kubectl') {
-                    withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
-                        sh """
-                            kubectl set image deployment/app-service \
-                                app-service=${APP_IMAGE} -n bookstore
-                            kubectl set image deployment/catalogue-service-blue \
-                                catalogue-service=${CATALOGUE_IMAGE} -n bookstore
-                        """
-                    }
+                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                    sh """
+                        kubectl --kubeconfig=\$KUBECONFIG \
+                            --server=https://kubernetes.default.svc \
+                            --insecure-skip-tls-verify=true \
+                            set image deployment/app-service \
+                            app-service=${APP_IMAGE} -n bookstore
+
+                        kubectl --kubeconfig=\$KUBECONFIG \
+                            --server=https://kubernetes.default.svc \
+                            --insecure-skip-tls-verify=true \
+                            set image deployment/catalogue-service-blue \
+                            catalogue-service=${CATALOGUE_IMAGE} -n bookstore
+                    """
                 }
             }
         }
 
         stage('Verify Deployment') {
             steps {
-                container('kubectl') {
-                    withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
-                        sh """
-                            kubectl rollout status deployment/app-service -n bookstore
-                            kubectl rollout status deployment/catalogue-service-blue -n bookstore
-                        """
-                    }
+                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                    sh """
+                        kubectl --kubeconfig=\$KUBECONFIG \
+                            --server=https://kubernetes.default.svc \
+                            --insecure-skip-tls-verify=true \
+                            rollout status deployment/app-service -n bookstore
+
+                        kubectl --kubeconfig=\$KUBECONFIG \
+                            --server=https://kubernetes.default.svc \
+                            --insecure-skip-tls-verify=true \
+                            rollout status deployment/catalogue-service-blue -n bookstore
+                    """
                 }
             }
         }
