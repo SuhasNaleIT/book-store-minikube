@@ -7,7 +7,7 @@ kind: Pod
 spec:
   containers:
   - name: builder
-    image: docker:24-cli
+    image: docker:27-cli
     command: ['cat']
     tty: true
     volumeMounts:
