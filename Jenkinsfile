@@ -1,11 +1,37 @@
 pipeline {
-    agent any
+    agent {
+        kubernetes {
+            yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: docker
+    image: docker:24-dind
+    securityContext:
+      privileged: true
+    env:
+    - name: DOCKER_TLS_CERTDIR
+      value: ""
+    volumeMounts:
+    - name: docker-graph-storage
+      mountPath: /var/lib/docker
+  - name: kubectl
+    image: bitnami/kubectl:latest
+    command: ['cat']
+    tty: true
+  volumes:
+  - name: docker-graph-storage
+    emptyDir: {}
+"""
+            defaultContainer 'docker'
+        }
+    }
 
     environment {
-        DOCKER_HUB_USER  = 'YOUR_DOCKERHUB_USERNAME'
-        APP_IMAGE        = "${DOCKER_HUB_USER}/app-service:${BUILD_NUMBER}"
-        CATALOGUE_IMAGE  = "${DOCKER_HUB_USER}/catalogue-service:${BUILD_NUMBER}"
-        KUBECONFIG       = credentials('kubeconfig')
+        DOCKER_HUB_USER = 'YOUR_DOCKERHUB_USERNAME'
+        APP_IMAGE       = "${DOCKER_HUB_USER}/app-service:${BUILD_NUMBER}"
+        CATALOGUE_IMAGE = "${DOCKER_HUB_USER}/catalogue-service:${BUILD_NUMBER}"
     }
 
     stages {
@@ -29,7 +55,7 @@ pipeline {
 
         stage('Push to Docker Hub') {
             steps {
-                echo 'Pushing images to Docker Hub...'
+                echo 'Pushing to Docker Hub...'
                 withCredentials([usernamePassword(
                     credentialsId: 'dockerhub-credentials',
                     usernameVariable: 'DOCKER_USER',
@@ -45,35 +71,39 @@ pipeline {
         }
 
         stage('Deploy to Kubernetes') {
-            steps {
-                echo 'Deploying to Kubernetes...'
-                sh """
-                    kubectl set image deployment/app-service \
-                        app-service=${APP_IMAGE} -n bookstore
+            container('kubectl') {
+                steps {
+                    echo 'Deploying to Kubernetes...'
+                    withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                        sh """
+                            kubectl set image deployment/app-service \
+                                app-service=${APP_IMAGE} -n bookstore
 
-                    kubectl set image deployment/catalogue-service-blue \
-                        catalogue-service=${CATALOGUE_IMAGE} -n bookstore
-                """
+                            kubectl set image deployment/catalogue-service-blue \
+                                catalogue-service=${CATALOGUE_IMAGE} -n bookstore
+                        """
+                    }
+                }
             }
         }
 
         stage('Verify Deployment') {
-            steps {
-                echo 'Verifying pods are healthy...'
-                sh """
-                    kubectl rollout status deployment/app-service -n bookstore
-                    kubectl rollout status deployment/catalogue-service-blue -n bookstore
-                """
+            container('kubectl') {
+                steps {
+                    echo 'Verifying pods...'
+                    withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                        sh """
+                            kubectl rollout status deployment/app-service -n bookstore
+                            kubectl rollout status deployment/catalogue-service-blue -n bookstore
+                        """
+                    }
+                }
             }
         }
     }
 
     post {
-        success {
-            echo '✅ Pipeline completed — bookstore deployed successfully!'
-        }
-        failure {
-            echo '❌ Pipeline failed — check logs above.'
-        }
+        success { echo '✅ Pipeline completed successfully!' }
+        failure { echo '❌ Pipeline failed — check logs above.' }
     }
 }
