@@ -68,43 +68,26 @@ spec:
 
         stage('Deploy to Kubernetes') {
             steps {
-                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
-                    sh """
-                        apk add --no-cache curl
-                        curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.29.0/bin/linux/amd64/kubectl
-                        chmod +x ./kubectl
+                sh """
+                    apk add --no-cache curl
+                    curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.29.0/bin/linux/aarch64/kubectl
+                    chmod +x ./kubectl
 
-                        ./kubectl --kubeconfig=\$KUBECONFIG \
-                            --server=https://kubernetes.default.svc \
-                            --insecure-skip-tls-verify=true \
-                            set image deployment/app-service \
-                            app-service=${APP_IMAGE} -n bookstore
+                    ./kubectl set image deployment/app-service \
+                        app-service=${APP_IMAGE} -n bookstore
 
-                        ./kubectl --kubeconfig=\$KUBECONFIG \
-                            --server=https://kubernetes.default.svc \
-                            --insecure-skip-tls-verify=true \
-                            set image deployment/catalogue-service-blue \
-                            catalogue-service=${CATALOGUE_IMAGE} -n bookstore
-                    """
-                }
+                    ./kubectl set image deployment/catalogue-service-blue \
+                        catalogue-service=${CATALOGUE_IMAGE} -n bookstore
+                """
             }
         }
 
         stage('Verify Deployment') {
             steps {
-                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
-                    sh """
-                        ./kubectl --kubeconfig=\$KUBECONFIG \
-                            --server=https://kubernetes.default.svc \
-                            --insecure-skip-tls-verify=true \
-                            rollout status deployment/app-service -n bookstore
-
-                        ./kubectl --kubeconfig=\$KUBECONFIG \
-                            --server=https://kubernetes.default.svc \
-                            --insecure-skip-tls-verify=true \
-                            rollout status deployment/catalogue-service-blue -n bookstore
-                    """
-                }
+                sh """
+                    ./kubectl rollout status deployment/app-service -n bookstore
+                    ./kubectl rollout status deployment/catalogue-service-blue -n bookstore
+                """
             }
         }
     }
